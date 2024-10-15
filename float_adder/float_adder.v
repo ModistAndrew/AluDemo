@@ -29,12 +29,14 @@ module FAdd(
     wire b_zero = b_e_min & b_m_min;
     wire a_denorm = a_e_min & ~a_m_min;
     wire b_denorm = b_e_min & ~b_m_min;
-    wire special_case = a_nan | b_nan | a_inf | b_inf | a_zero | b_zero;
+    wire inverse = (a_s ^ b_s) & (a_e == b_e) & (a_m == b_m);
+    wire special_case = a_nan | b_nan | a_inf | b_inf | a_zero | b_zero | inverse;
     wire [31:0] special_output = (a_nan | b_nan) ? NAN :
     a_inf ? ((b_inf & (a_s ^ b_s)) ? NAN : a) :
     b_inf ? b :
     a_zero ? ((b_zero & (a_s ^ b_s) ? ZERO : b)) :
-    b_zero ? a : 32'hffffffff;
+    b_zero ? a :
+    inverse ? ZERO : 32'hffffffff;
 
     reg a_sign;
     reg b_sign;
