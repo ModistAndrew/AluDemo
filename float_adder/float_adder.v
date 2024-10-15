@@ -6,7 +6,7 @@ module FAdd(
     output reg [31:0]           c,
     output reg [2:0]           state
 );
-    parameter NAN = {1'b0, 8'b11111111, 23'b1};
+    parameter NAN = 32'b01111111100000000000000000000001; // not a number
     parameter ZERO = 32'b0; // positive zero
 
     wire a_s = a[31];
