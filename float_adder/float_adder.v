@@ -1,11 +1,13 @@
 module FAdd(
+    input rst,
     input clk,
     input  [31:0]               a,
     input  [31:0]               b,
-    output reg [31:0]          c
+    output reg [31:0]           c,
+    output reg [2:0]           state
 );
-    wire NAN = {1'b0, 8'b11111111, 23'b1};
-    wire ZERO = 32'b0; // positive zero
+    parameter NAN = {1'b0, 8'b11111111, 23'b1};
+    parameter ZERO = 32'b0; // positive zero
 
     wire a_s = a[31];
     wire b_s = b[31];
@@ -40,7 +42,6 @@ module FAdd(
     reg [26:0] b_add;
     reg [7:0] a_exp;
     reg [7:0] b_exp;
-    reg [2:0] state;
     parameter READ = 3'd0,
     ALIGN = 3'd1,
     ADD = 3'd2,
@@ -54,6 +55,10 @@ module FAdd(
     reg[7:0] c_exp;
 
 always @(posedge clk) begin
+if (!rst) begin
+    state <= READ;
+end
+else begin
 case (state)
 READ: begin
     a_sign <= a_s;
@@ -110,6 +115,7 @@ DENORM: begin
         c_add <= c_add >> 1;
         c_add[0] <= c_add[0] | c_add[1];
     end
+    state <= ROUND;
 end
 ROUND: begin
     if (c_add[2] & (c_add[1] | c_add[0] | c_add[3])) begin
@@ -127,10 +133,11 @@ PACK: begin
     end else begin
         c[30:23] <= c_exp;
     end
+    state <= OUTPUT;
 end
 OUTPUT: begin
-    state <= READ;
 end
 endcase
+end
 end
 endmodule
