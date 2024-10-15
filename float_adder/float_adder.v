@@ -62,6 +62,7 @@ READ: begin
     b_add <= {~b_denorm, b_m, 3'b0};
     a_exp <= a_denorm ? 8'b1 : a_e;
     b_exp <= b_denorm ? 8'b1 : b_e;
+    c <= special_output;
     state <= special_case ? OUTPUT : ALIGN;
 end
 ALIGN: begin
@@ -112,10 +113,24 @@ DENORM: begin
 end
 ROUND: begin
     if (c_add[2] & (c_add[1] | c_add[0] | c_add[3])) begin
-        c_add <= c_add + 1;
+        c_add <= c_add + 4'b1000;
     end
     state <= PACK;
 end
 PACK: begin
+    c[31] <= c_sign;
+    c[22:0] <= c_add[25:3];
+    if (c_add[27]) begin // overflow in rounding
+        c[30:23] <= c_exp + 1;
+    end else if (~c_add[26]) begin // denormalized number
+        c[30:23] <= c_exp - 1;
+    end else begin
+        c[30:23] <= c_exp;
+    end
+end
+OUTPUT: begin
+    state <= READ;
+end
+endcase
 end
 endmodule
