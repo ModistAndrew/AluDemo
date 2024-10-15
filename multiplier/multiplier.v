@@ -22,9 +22,9 @@ module Multi(
         for (i = 0; i < 30; i = i + 1) begin: FALayerLoop
             if (i == 0) begin
                 FALayer fa0(
-                        .a(b[0] ? {1'b0, a[31:1]} : 0),
-                        .b(b[1] ? a : 0),
-                        .c(b[2] ? {a[30:0], 1'b0} : 0),
+                        .a(b[0] ? {1'b0, a[31:1]} : 32'b0),
+                        .b(b[1] ? a : 32'b0),
+                        .c(b[2] ? {a[30:0], 1'b0} : 32'b0),
                         .result(result[0]),
                         .carry(carry[0])
                     );
@@ -32,7 +32,7 @@ module Multi(
                 FALayer fa(
                         .a({b[i + 1] ? a[31] : 1'b0, result[i - 1][31:1]}),
                         .b(carry[i - 1]),
-                        .c(b[i + 2] ? {a[30:0], 1'b0} : 0),
+                        .c(b[i + 2] ? {a[30:0], 1'b0} : 32'b0),
                         .result(result[i]),
                         .carry(carry[i])
                     );
