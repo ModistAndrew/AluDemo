@@ -21,6 +21,7 @@ module test_float_adder;
     integer i;
     integer j;
     initial begin
+    // floats from -1 to 1 randomly generated
     a_array[0] = 32'b10111111010101110001011010001011;
     b_array[0] = 32'b00111111010010000111100100110001;
     c_array[0] = 32'b10111101011010011101010110100000;
@@ -171,6 +172,8 @@ module test_float_adder;
     a_array[49] = 32'b00111111010101010100111100011111;
     b_array[49] = 32'b00111111010111111000111010110110;
     c_array[49] = 32'b00111111110110100110111011101010;
+
+    // floats transformed from random integers
     a_array[50] = 32'b01111101010111100001100011111000;
     b_array[50] = 32'b11110011101000011000001000011011;
     c_array[50] = 32'b01111101010111100001100011100100;
@@ -312,32 +315,42 @@ module test_float_adder;
     a_array[96] = 32'b10011010111111100011011000100101;
     b_array[96] = 32'b11101110101111100100001000001000;
     c_array[96] = 32'b11101110101111100100001000001000;
+
+    // a + (-a) = +0
     a_array[97] = 32'b00001100101111100101101111101001;
     b_array[97] = 32'b10001100101111100101101111101001;
     c_array[97] = 32'b00000000000000000000000000000000;
+
+    // 0 + (-0) = +0
     a_array[98] = 32'b00000000000000000000000000000000;
     b_array[98] = 32'b10000000000000000000000000000000;
     c_array[98] = 32'b00000000000000000000000000000000;
+
+     // -inf + inf = NaN
     a_array[99] = 32'b11111111100000000000000000000000;
     b_array[99] = 32'b01111111100000000000000000000000;
     c_array[99] = 32'b01111111100000000000000000000001;
-        #5;
-        for (i = 0; i < 100; i = i + 1) begin
-            rst = 0;
-            #10;
-            rst = 1;
-            a = a_array[i];
-            b = b_array[i];
-            for (j = 0; j < 300; j = j + 1) begin // it takes at most about 255 + 32 cycles to finish the calculation
-//                $display("state: %d, c: %b", state, c);
-                #10;
-            end
-            if (c !== c_array[i] && !(c === 32'b01111111100000000000000000000001 && c_array[i][30:23] === 8'b11111111 && c_array[i][22:0] !== 23'b0)) begin
-                 $display("Wrong Answer! i: %d, a: %b, b: %b, output: %b, expected: %b", i, a, b, c, c_array[i]);
-                 $fatal;
-            end
+
+    // wait for the tick to be in the middle of the clock cycle
+    #5;
+    for (i = 0; i < 100; i = i + 1) begin
+        rst = 0;
+        #10;
+        rst = 1;
+        a = a_array[i];
+        b = b_array[i];
+        // it takes at most about 255 + 32 cycles to finish the calculation
+        for (j = 0; j < 300; j = j + 1) begin
+//           $display("state: %d, c: %b", state, c);
+           #10;
         end
-		$display("Congratulations! You have passed all of the tests.");
-		$finish;
+        // NaN should be specially judged, while we do distinguish between +0 and -0
+        if (c !== c_array[i] && !(c === 32'b01111111100000000000000000000001 && c_array[i][30:23] === 8'b11111111 && c_array[i][22:0] !== 23'b0)) begin
+             $display("Wrong Answer! i: %d, a: %b, b: %b, output: %b, expected: %b", i, a, b, c, c_array[i]);
+             $fatal;
+        end
+    end
+	$display("Congratulations! You have passed all of the tests.");
+	$finish;
     end
 endmodule
